@@ -1,6 +1,29 @@
-# front-end
+# memo-front-end
 
-> A Vue.js project
+> 在线memo前端部分
+
+# 组件
+cronJob
+
+dateTImePicker
+
+editNote
+
+eventBus
+
+fullForm
+
+imageUnit
+
+note
+
+noteForm
+
+notes
+
+pageFooter
+
+toolbar
 
 ## Build Setup
 
@@ -23,5 +46,3 @@ npm run unit
 # run all tests
 npm test
 ```
-
-For detailed explanation on how things work, checkout the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
