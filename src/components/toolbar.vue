@@ -1,9 +1,9 @@
 <template>
-  <md-toolbar style="width: 100%; margin-bottom: 13px; background-color: #fb0">
+  <md-toolbar class="md-accent" style="flex: 1;">
     <md-button class="md-icon-button">
       <md-icon>home</md-icon>
     </md-button>
-    <h2 class="md-title" style="flex: 1">
+    <h2 class="md-title" style="">
       在线memo
     </h2>
     <md-button class="md-icon-button" href="https://zhangfeng.site">

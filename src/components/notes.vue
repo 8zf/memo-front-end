@@ -1,24 +1,21 @@
 <template>
-  <md-layout
-    md-align="center"
-    class="notes"
+  <div
+    class=" md-layout notes md-alignment-top-center"
     v-masonry
-    item-selector=".item-note"
-  >
+    item-selector=".item-note">
     <div
       v-masonry-tile
       class="item-note"
       v-model="notes"
       v-for="note in notes"
-      :key="note"
-      style="display: inline-block">
+      :key="note">
       <note :note="note" :notes="notes" v-on:refreshThis="refreshThis"></note>
     </div>
-  </md-layout>
+  </div>
 </template>
 <script>
   import note from './note'
-//  import eventBus from './eventBus'
+  //  import eventBus from './eventBus'
   import $ from "jquery"
   //  import draggable from 'vuedraggable'
   import masonry from 'masonry-layout'
@@ -61,9 +58,6 @@
     z-index: 20;
   }
 
-  .notes {
-  }
-
   .menu-fade-enter-active {
     transition: all .3s ease;
   }
@@ -76,4 +70,11 @@
     /*transform: translateX(10px);*/
     opacity: 0;
   }
+
+  @media only screen and (max-width: 700px) {
+    .item-note {
+      width: 100%;
+    }
+  }
+
 </style>

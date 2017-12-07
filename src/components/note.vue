@@ -1,38 +1,22 @@
 <template>
   <md-card md-with-hover
-           @click.native="openDialog('detail')"
+           @click.native="openDialog"
            @mouseover.native="showMenu"
            @mouseout.native="hideMenu"
            class="card-body animated"
-           v-bind:class="{zoomOut: isDisappear, fadeIn: !isDisappear}"
-           style="margin: 4px; padding-bottom: 10px; background-color: #fafafa; width: 300px;"
-           draggable="true">
-
-    <!--悬浮菜单-->
-
-    <!--<md-button class="md-fab md-mini md-raised choose" v-show="menuToggle" @click.native.stop.prevent="">-->
-    <!--<md-icon>check</md-icon>-->
-    <!--</md-button>-->
-    <!--v-show="menuToggle"-->
-    <!--<p v-show="menuToggle" class="menu">菜单</p>-->
-    <div
-      v-masonry
-      item-selector=".note-image">
-      <md-card-media
-        v-masonry-tile
-        class="note-image"
-        v-if="note.images.length && note.type === 'ordinary'"
-        v-for="image_path in note.images"
-        :key="image_path">
-        <img :src="GLOBAL.server_address+image_path">
-      </md-card-media>
-    </div>
-    <div class="card-content">
-      <md-card-header>
-        <div class="md-title" v-html="note.title"></div>
-      </md-card-header>
-      <md-card-content v-html="note.content"></md-card-content>
-    </div>
+           v-bind:class="{zoomOut: isDisappear, fadeIn: !isDisappear}">
+    <md-card-media
+      class="note-image"
+      v-if="note.images.length && note.type === 'ordinary'"
+      v-for="image_path in note.images"
+      :key="image_path">
+      <img :src="GLOBAL.server_address+image_path">
+    </md-card-media>
+    <md-card-header>
+      <div class="md-title" v-html="note.title"></div>
+    </md-card-header>
+    <md-card-content v-html="note.content">
+    </md-card-content>
 
     <p class="time-info">
       {{note.updatedAt === "" ? "创建于: " + note.createdAt : "更新于: " + note.updatedAt}}
@@ -47,38 +31,33 @@
 
 
     <md-card-actions class="note-action" v-show="menuToggle">
-      <md-speed-dial md-mode="fling" md-direction="top" @click.native="test">
-        <md-button md-fab-trigger @click.native.prevent.stop="inform" class="md-icon-button md-mini">
-          <md-icon md-icon-morph>close</md-icon>
+      <md-speed-dial md-effect="fling" md-event="hover" md-direction="top">
+        <md-speed-dial-target class="md-plain md-mini md-icon-button ">
           <md-icon>more_vert</md-icon>
-          <md-tooltip md-direction="bottom">更多操作</md-tooltip>
-        </md-button>
-        <md-button class="md-icon-button" @click.native.prevent.stop="deleteNote">
-          <md-icon>delete</md-icon>
-          <md-tooltip md-direction="right">删除记事</md-tooltip>
-        </md-button>
-        <md-button class="md-icon-button" @click.stop.prevent.native="triggerDatePicker">
-          <md-icon>alarm_add</md-icon>
-          <md-tooltip md-direction="right">设置提醒</md-tooltip>
-        </md-button>
+        </md-speed-dial-target>
+        <md-speed-dial-content>
+          <!--<md-icon @click.native.prevent.stop="deleteNote">delete</md-icon>-->
+          <!--<md-icon @click.stop.prevent.native="triggerDatePicker">alarm_add</md-icon>-->
+          <md-button class="md-icon-button" @click.native.prevent.stop="deleteNote">
+            <md-icon>delete</md-icon>
+            <md-tooltip md-direction="right">删除记事</md-tooltip>
+          </md-button>
+          <md-button class="md-icon-button" @click.stop.prevent.native="triggerDatePicker">
+            <md-icon>alarm_add</md-icon>
+            <md-tooltip md-direction="right">设置提醒</md-tooltip>
+          </md-button>
+        </md-speed-dial-content>
       </md-speed-dial>
     </md-card-actions>
 
     <!--弹出窗口，使用路由，可以用于网页提醒-->
-    <md-dialog
-      @open="onOpen"
-      @close="onClose"
-      ref="detail">
-
+    <md-dialog :md-active.sync="showDialog" class="note-dialog">
       <note-form
-      style="margin: 0px!important;"
-      :on_edit="true"
-      :new_note.sync="note"
-      :role="'edit'"
-      v-on:toggleClose="toggleClose"
-      v-on:refreshThis="refreshThis">
+        :on_edit="true"
+        :new_note.sync="note"
+        :role="'edit'"
+        v-on:refreshThis="refreshThis">
       </note-form>
-
     </md-dialog>
 
   </md-card>
@@ -91,10 +70,9 @@
   export default {
     data () {
       return {
-        isDisappear: null,
+        showDialog: false,
         menuToggle: false,
         datePickerToggle: false,
-        closeToggle: false,
         GLOBAL: this.GLOBAL,
         startTime: {
           time: this.note.informTime
@@ -137,46 +115,17 @@
 //      this.isDisappear = false
     },
     methods: {
-      test() {
-        console.log("我看见你了")
-      },
-      openDialog(ref) {
-        this.$refs[ref].open();
-      },
-      closeDialog(ref) {
-        this.$refs[ref].close();
-      },
-      onOpen() {
-        //设置透明度0
-        this.isDisappear = true;
-        console.log('Opened');
-      },
-      onClose(type) {
-        //设置透明度1
-        this.isDisappear = false;
-        console.log('Closed', type);
-      },
       showMenu() {
-//        console.log("show menu");
-        this.menuToggle = true;
+//        console.log('show')
+        this.menuToggle = true
       },
       hideMenu() {
-//        console.log("hide menu");
-        this.menuToggle = false;
+//        console.log('hide')
+        this.menuToggle = false
       },
-      dragStart(e) {
-        console.log(e)
-      },
-      dragEnter(e) {
-        console.log("drag enter");
-        console.log(e.target);
-      },
-      dropEnd(e) {
-        console.log("drop here");
-        console.log(e);
-      },
-      toggleClose() {
-        this.$refs['detail'].close();
+      openDialog() {
+        console.log('open')
+        this.showDialog = true
       },
       refreshThis() {
         this.$emit("refreshThis");
@@ -207,9 +156,6 @@
             console.log('设置时间失败');
             console.log(e);
           })
-      },
-      inform() {
-
       },
       triggerDatePicker() {
         console.log("trigger date time picker");
@@ -258,9 +204,21 @@
 
   .card-body {
     -vendor-animation-duration: 1s;
-    overflow: visible;
+    margin: 4px;
+    padding-bottom: 10px;
+    background-color: #fafafa;
+    width: 350px;
   }
 
+  .note-dialog {
+    overflow-y: scroll;
+  }
+  .md-speed-dial-target {
+    box-shadow: none;
+  }
+  .md-speed-dial-content {
+    box-shadow: none;
+  }
   .menu-fade-enter-active {
     transition: all .7s ease;
   }
@@ -274,5 +232,11 @@
     opacity: 0;
   }
 
-
+  @media only screen and (max-width: 700px) {
+    .card-body {
+      width: 100%;
+      margin-left: 0px;
+      margin-right: 0px;
+    }
+  }
 </style>

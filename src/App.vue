@@ -1,21 +1,22 @@
 <template>
-  <md-layout md-column>
-    <toolbar></toolbar>
+  <div>
+    <toolbar style="margin-bottom: 13px;"></toolbar>
     <note-form :notes="notes"
-               :on_edit="on_edit"
                :role="'create'"
+               :on_edit="on_edit"
                :new_note.sync="new_note"
+               id="new_note_form"
                v-on:refreshNotes="fetchData"
                v-on:openFull="openFull"
-               v-on:closeFull="closeFull">
+               v-on:closeFull="closeFull"
+               style="padding-bottom: 15px;">
     </note-form>
-    <md-layout class="out-of-notes"
-               md-align="center">
+    <div class="md-layout">
       <notes :notes="notes" v-on:refreshNotes="fetchData"></notes>
-    </md-layout>
+    </div>
     <cron-job :notes.sync="notes" :notes_ready="notes_ready"></cron-job>
-    <page-footer></page-footer>
-  </md-layout>
+    <!--<page-footer></page-footer>-->
+  </div>
 </template>
 
 <script>
@@ -30,38 +31,8 @@
     data () {
       return {
         notes_ready: false,
+        on_edit: false,
         notes: [],
-//        notes: [
-//          {
-//            type: "ordinary",
-//            title: "灵感",
-//            content: "在线memo可以记下创意",
-//            images: ["https://keep.google.com/media/1oY9PDQIoTM-qy08855Pzit2v0H2-db0?accept=image/gif,image/jpeg,image/jpg,image/png,image/webp,audio/aac&sz=600"],
-//            informTime: "* * * * *"
-//          },
-//          {
-//            type: "list",
-//            lists: [
-//              {content: "起床", done: false},
-//              {content: "刷牙", done: false},
-//              {content: "吃饭", done: false}
-//            ],
-//            title: "功能",
-//            content: "设置网页提醒,以及到达率较高的短信提醒，随时随地。这里有图片吗，并没有",
-//            images: []
-//          },
-//          {
-//            type: "ordinary",
-//            title: "多彩",
-//            content: "支持导入图片，链接"
-//          },
-//          {
-//            id: "3",
-//            type: "ordinary",
-//            title: "智",
-//            content: "将接入语意识别，使用更加智能"
-//          },
-//        ],
         new_note: {
           type: "",
           title: "",
@@ -75,7 +46,6 @@
           isInformed: false,
           repeat: ""
         },
-        on_edit: false,
       }
     },
     components: {
@@ -96,16 +66,6 @@
       this.fetchData();
     },
     methods: {
-      onClick() {
-        this.on_edit = false;
-      },
-      openFull() {
-        this.on_edit = true;
-      },
-      closeFull() {
-        console.log("close full");
-        this.on_edit = false;
-      },
       fetchData() {
         this.axios.get(this.GLOBAL.server_address + '/note')
           .then((response) => {
@@ -127,16 +87,13 @@
 </script>
 
 <style scoped>
-  @media (max-width: 1300px) {
-    .out-of-notes {
-      width: 100%;
-    }
-  }
-
-  .out-of-notes {
-    margin-top: 13px;
-    width: 1240px;
-    margin-left: auto;
-    margin-right: auto
-  }
+  /*@media (max-width: 900px) {*/
+    /*.item-note {*/
+      /*width: 100%;*/
+      /*margin-left: 130px;*/
+    /*}*/
+    /*.card-body {*/
+      /*width: 100%!important;*/
+    /*}*/
+  /*}*/
 </style>

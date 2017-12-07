@@ -1,5 +1,5 @@
 <template>
-  <md-layout md-align="center">
+  <div class="md-layout md-align-center" >
     <div class="md-card" style="outline: none;background-color: #fafafa" contenteditable="false">
       <md-card-header contenteditable="true" style="outline: none; font-size: large" placeholder="标题" id="title"
                       v-html="note.title">
@@ -10,8 +10,8 @@
       <div contenteditable="false" style="padding-left: 590px;">
       </div>
       <transition name="tool">
-        <md-layout>
-          <md-layout md-flex="80">
+        <div class="md-layout">
+          <div class="md-layout" md-flex="80">
             <md-button>
               <md-icon>
                 alarm
@@ -30,17 +30,17 @@
               </md-icon>
               <md-tooltip md-direction="bottom">分享</md-tooltip>
             </md-button>
-          </md-layout>
+          </div>
 
-          <md-layout md-align="end">
+          <div class="md-layyout" md-align="end">
             <md-button md-fab md-fab-bottom-right @click.native="modifyNote" class="md-primary">
               完成
             </md-button>
-          </md-layout>
-        </md-layout>
+          </div>
+        </div>
       </transition>
     </div>
-  </md-layout>
+  </div>
 </template>
 <script>
   export default {

@@ -1,87 +1,71 @@
 <template>
-  <md-layout md-align="center">
-    <div class="md-card"
-         style="width: 600px; max-height: 800px; margin: 0px; display: flex; outline: none;background-color: #fafafa"
-         v-on:click="openFull"
-         tabindex="0">
+  <div class="md-layout md-alignment-top-center">
+    <md-card
+      id="note_form"
+      v-on:click.native="openFull"
+      tabindex="0">
+      <md-card-area>
+        <md-card-media v-if="new_note.images.length"
+                       class="multi-images"
+                       v-for="(image, index) in new_note.images"
+                       :index="index"
+                       :key="image">
+          <!--控制删除按钮和进度条的显示消失-->
+          <image-unit :src="image" :done_uploading="done_uploading" v-on:deleteMe="deleteMe($event)"
+                      :index="index"></image-unit>
+        </md-card-media>
+        <md-card-content style="padding: 6px 6px 0px 6px;">
+          <!--新记事标题与内容-->
+          <!--v-on:keyup.enter="switchToContent"-->
+          <div contenteditable="true"
+               style="outline: none; white-space: pre-wrap; font-size: large; margin-left: 5px; margin-top: 5px;"
+               placeholder="标题"
+               id="new_title"
+               v-on:keydown.enter.prevent="pressTab($event)"
+               ref="title"
+               tabindex="1"
+               v-html="new_note.title">
+          </div>
 
-      <md-card-media v-if="new_note.images.length"
-                     class="multi-images"
-                     v-for="(image, index) in new_note.images"
-                     :index="index"
-                     :key="image">
-        <!--控制删除按钮和进度条的显示消失-->
-        <image-unit :src="image" :done_uploading="done_uploading" v-on:deleteMe="deleteMe($event)" :index="index"></image-unit>
-        <!--<img :src="image[0] === '/' ? GLOBAL.server_address + image : image"-->
-             <!--class="new-note-preview">-->
-        <!--<md-progress md-indeterminate v-if="!done_uploading[index]"></md-progress>-->
-        <!--<md-button class="md-icon-button delete-image" v-if="!done_uploading[index]" @click.native="deleteImage">-->
-          <!--<md-icon>delete</md-icon>-->
-        <!--</md-button>-->
-      </md-card-media>
+          <div contenteditable="true"
+               style="outline: none; margin-left: 5px;"
+               placeholder="添加内容..."
+               id="new_content"
+               ref="content"
+               tabindex="2"
+               v-html="new_note.content">
+          </div>
 
-      <!--新记事标题与内容-->
-      <!--v-on:keyup.enter="switchToContent"-->
-      <div contenteditable="true"
-           style="outline: none; white-space: pre-wrap; font-size: large; margin-left: 5px; margin-top: 5px;"
-           placeholder="标题"
-           id="new_title"
-           v-on:keydown.enter.prevent="pressTab($event)"
-           ref="title"
-           tabindex="1"
-           v-html="new_note.title">
-      </div>
+          <div contenteditable="false" style="padding-left: 590px;">
+          </div>
+          <transition name="editing">
+            <md-card-actions v-show="on_edit">
+              <md-button @click.native.stop="uploadFile">
+                <md-icon>
+                  photo
+                </md-icon>
+                <md-tooltip md-direction="bottom">添加图片</md-tooltip>
+                <input type="file"
+                       name="note_image"
+                       id="image_input"
+                       accept="image/*"
+                       class="image-form"
+                       v-on:change="onFileChange">
+              </md-button>
+              <md-button md-fab md-fab-bottom-right @click.native.stop="addOrEdit" class="md-primary">
+                完成
+              </md-button>
+            </md-card-actions>
+          </transition>
+        </md-card-content>
 
-      <div contenteditable="true"
-           style="outline: none; margin-left: 5px;"
-           placeholder="添加内容..."
-           id="new_content"
-           ref="content"
-           tabindex="2"
-           v-html="new_note.content">
-      </div>
-
-      <div contenteditable="false" style="padding-left: 590px;">
-      </div>
-      <transition name="tool">
-        <md-layout v-if="on_edit">
-          <md-layout md-flex="80">
-            <!--图片-->
-            <md-button @click.native.stop="uploadFile">
-              <md-icon>
-                photo
-              </md-icon>
-              <md-tooltip md-direction="bottom">添加图片</md-tooltip>
-              <input type="file"
-                     name="note_image"
-                     id="image_input"
-                     accept="image/*"
-                     class="image-form"
-                     v-on:change="onFileChange">
-            </md-button>
-            <!--提醒-->
-            <!--<md-button>-->
-              <!--<md-icon>-->
-                <!--alarm_add-->
-              <!--</md-icon>-->
-              <!--<md-tooltip md-direction="bottom">设置提醒</md-tooltip>-->
-            <!--</md-button>-->
-          </md-layout>
-
-          <md-layout md-align="end">
-            <!--提交-->
-            <md-button md-fab md-fab-bottom-right @click.native.stop="addOrEdit" class="md-primary">
-              完成
-            </md-button>
-          </md-layout>
-        </md-layout>
-      </transition>
-    </div>
-    <md-snackbar ref="snackbar">
-      <span>{{snackbar_content}}</span>
-      <md-button class="md-accent" md-theme="light-blue" @click.native="$refs.snackbar.close()">已阅</md-button>
-    </md-snackbar>
-  </md-layout>
+      </md-card-area>
+      <md-snackbar ref="snackbar" :md-active.sync="show_snackbar">
+        <span>{{snackbar_content}}</span>
+        <md-button class="md-accent" md-theme="light-blue" @click="show_snackbar = false">已阅</md-button>
+      </md-snackbar>
+    </md-card>
+  </div>
 </template>
 <script>
   import $ from "jquery";
@@ -89,19 +73,13 @@
   export default {
     data () {
       return {
-        //as well this ois the standard template
-//        new_note: {
-//          type: "",
-//          title: "",
-//          content: "",
-//          images: [],
-//          cron: "* * * * *"
-//        },
         new_list: {},
         image_data: [],
         done_uploading: [],
         have_file: false,
-        snackbar_content: ""
+        snackbar_content: "",
+        show_snackbar: false,
+//        on_edit: false
       }
     },
     beforeMount() {
@@ -111,46 +89,29 @@
       }
     },
     methods: {
-//      tmp() {
-//        v-on:focusin="focusOutside"
-//        v-on:focusout="blurOutside"
-//        v-on:focusin="focusTitle"
-//        v-on:focusout="blurTitle"
-//        v-on:focusin="focusContent"
-//        v-on:focusout="blurContent"
-//      },
-//      focusOutside() {
-//        console.log('focus outside');
-//        console.log("焦点个数：" + $(':focus').length);
-//      },
-//      blurOutside() {
-//        console.log('blur outside');
-//        console.log("焦点个数：" + $(':focus').length);
-//
-//      },
-//      blurTitle() {
-//        console.log('blur title')
-//        console.log("焦点个数：" + $(':focus').length);
-//
-//      },
-//      blurContent() {
-//        console.log('blur content')
-//        console.log("焦点个数：" + $(':focus').length);
-//
-//      },
-//      focusTitle() {
-//        console.log('focus title')
-//        console.log("焦点个数：" + $(':focus').length);
-//
-//      },
-//      focusContent() {
-//        console.log('focus content')
-//        console.log("焦点个数：" + $(':focus').length);
-//
-//      },
-      openFull() {
+      openFull(e) {
+        if (this.on_edit === true)
+          return
         console.log("open editor");
-        this.$emit('openFull');
+        this.on_edit = true
+        $("html").on('click', e => {
+          if ($(e.target).closest(".md-snackbar").length !== 0) {
+            //点到snackbar了,不做操作
+            console.log('in snackbar')
+            return
+          }
+          if ($(e.target).closest("#note_form").length === 0) {
+            console.log('jiewai')
+            if (this.$refs.title.innerHTML !== '' || this.$refs.content.innerHTML !== '' || this.new_note.images.length !== 0) {
+              console.log('not empty')
+              this.addNote()
+            }
+            this.on_edit = false
+            $("html").off('click')
+          }
+          else
+            console.log('jienei')
+        })
       },
       addOrEdit() {
         if (this.role === "create") {
@@ -161,10 +122,8 @@
         }
       },
       addNote() {
-        console.log("close full");
-        this.$emit("closeFull");
-        console.log(this.$refs.title.innerHTML);
-        console.log(this.$refs.content.innerHTML);
+//        console.log(this.$refs.title.innerHTML);
+//        console.log(this.$refs.content.innerHTML);
         if (this.$refs.title.innerHTML === "" && this.$refs.content.innerHTML === "" && this.new_note.images.length === 0) {
           return
         }
@@ -176,8 +135,7 @@
         //将数组转换成字符串
         this.new_note.images = this.new_note.images.toString();
         for (let key in this.new_note) {
-          console.log("key: " + key);
-          console.log("value: " + this.new_note[key]);
+          console.log(key + ': ' + this.new_note[key]);
           data.append(key, this.new_note[key]);
         }
         data.set("createdAt", new Date().toLocaleString());
@@ -188,23 +146,22 @@
               console.log(response);
               this.$emit("refreshNotes");
               this.snackbar_content = "创建成功";
-              this.$refs.snackbar.open();
+              this.show_snackbar = true;
+              this.new_note.type = "";
+              this.new_note.title = "";
+              this.new_note.content = "";
+              this.new_note.images = [];
+              this.image_data = [];
+              this.$refs.title.innerHTML = '';
+              this.$refs.content.innerHTML = '';
             }
           })
           .catch((e) => {
-            console.log('插入数据失败');
+            console.log('插入数据发生错误');
             console.log(e);
-            this.snackbar_content = "插入数据失败" + e;
-            this.$refs.snackbar.open();
+            this.snackbar_content = "插入数据发生错误" + e;
+            this.show_snackbar = true;
           });
-        this.new_note.type = "";
-        this.new_note.title = "";
-        this.new_note.content = "";
-        this.new_note.images = [];
-        this.image_data = [];
-        this.$refs.title.innerHTML = '';
-        this.$refs.content.innerHTML = '';
-
       },
       editNote() {
         console.log('modify note');
@@ -218,14 +175,14 @@
             console.log('modify success');
             console.log(response);
             this.snackbar_content = "modify success";
-            this.$refs.snackbar.open();
+            this.show_snackbar = true;
             this.$emit("refreshThis");
             this.$emit("toggleClose");
           })
           .catch((e) => {
             console.log('modify failed');
             this.snackbar_content = "modify failed" + e;
-            this.$refs.snackbar.open();
+            this.show_snackbar = true;
           });
 
       },
@@ -238,14 +195,14 @@
             console.log('modify image success');
             console.log(response);
             this.snackbar_content = "删除图片成功";
-            this.$refs.snackbar.open();
+            this.show_snackbar = true;
 //            this.$emit("refreshThis");
 //            this.$emit("toggleClose");
           })
           .catch((e) => {
             console.log('modify failed');
             this.snackbar_content = "modify failed" + e;
-            this.$refs.snackbar.open();
+            this.show_snackbar = true;
           });
       },
       uploadFile() {
@@ -280,7 +237,7 @@
               console.log(this.done_uploading);
               console.log("图片上传成功");
               this.snackbar_content = "图片上传成功";
-              this.$refs.snackbar.open();
+              this.show_snackbar = true;
               this.new_note.images[now_length - 1] = response.data.filepath;
               console.log(response);
 //              this.new_note.images.push(response.data.filepath);
@@ -291,7 +248,7 @@
               console.log(this.done_uploading);
               this.new_note.images.splice(now_length - 1, 1);
               this.snackbar_content = "图片上传失败" + e;
-              this.$refs.snackbar.open();
+              this.show_snackbar = true;
             });
         };
       },
@@ -302,17 +259,16 @@
         }
       },
       deleteMe(ev) {
-          console.log("delete me");
-          console.log(ev);
-          this.new_note.images.splice(ev, 1);
-          this.editNoteImages();
+        console.log("delete me");
+        console.log(ev);
+        this.new_note.images.splice(ev, 1);
+        this.editNoteImages();
       }
     },
-    props: ["notes", "on_edit", "new_note", "role"],
+    props: ["notes", "new_note", "on_edit", "role"],
     components: {
       "imageUnit": imageUnit,
     }
-    //role: create/edit
   }
 </script>
 <style scoped>
@@ -335,15 +291,15 @@
     /*width: 290px;*/
   }
 
-  .tool-enter-active {
+  .editing-enter-active {
     transition: opacity .7s
   }
 
-  .tool-leave-active {
+  .editing-leave-active {
     transition: opacity 0s
   }
 
-  .tool-enter, .tool-leave-active {
+  .editing-enter, .editing-leave-active {
     opacity: 0
   }
 
@@ -352,15 +308,22 @@
     height: 0px;
   }
 
-  .delete-image {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    background-color: transparent;
-    border-radius: 3px;
+  #note_form {
+    width: 600px;
+    background-color: #fafafa;
+    outline: none;
+    display: flex;
+    /*max-height: 800px;*/
+    overflow: visible;
   }
 
   .multi-images {
     padding: 10px;
+  }
+
+  @media only screen and (max-width: 700px) {
+    #note_form {
+      width: 100%;
+    }
   }
 </style>
