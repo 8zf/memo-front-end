@@ -1,8 +1,9 @@
 <template>
   <div
-    class=" md-layout notes md-alignment-top-center"
     v-masonry
-    item-selector=".item-note">
+    item-selector=".item-note"
+    fit-width="true"
+    style="margin: 0 auto">
     <div
       v-masonry-tile
       class="item-note"
@@ -15,9 +16,7 @@
 </template>
 <script>
   import note from './note'
-  //  import eventBus from './eventBus'
   import $ from "jquery"
-  //  import draggable from 'vuedraggable'
   import masonry from 'masonry-layout'
   export default {
     data () {
@@ -50,6 +49,9 @@
 
 </script>
 <style scoped>
+  .notes {
+    left: calc()
+  }
   .choose {
     position: absolute;
     left: 0px;
@@ -74,6 +76,7 @@
   @media only screen and (max-width: 700px) {
     .item-note {
       width: 100%;
+      padding: 0px 20px 15px 10px;
     }
   }
 

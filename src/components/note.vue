@@ -13,13 +13,14 @@
       <img :src="GLOBAL.server_address+image_path">
     </md-card-media>
     <md-card-header>
-      <div class="md-title" v-html="note.title"></div>
+      <div class="md-title" v-html="note.title" style="white-space: pre-wrap;"></div>
     </md-card-header>
-    <md-card-content v-html="note.content">
+    <md-card-content >
+      <div v-html="note.content" class="md-content" style="white-space: pre-wrap;"></div>
     </md-card-content>
 
     <p class="time-info">
-      {{note.updatedAt === "" ? "创建于: " + note.createdAt : "更新于: " + note.updatedAt}}
+      {{(note.updatedAt === note.createdAt || note.updatedAt === "") ? "创建于: " + note.createdAt : "更新于: " + note.updatedAt}}
     </p>
     <div style="margin-left: 16px;" v-show="note.informTime !== '' || datePickerToggle">
       <span style="color: grey;">提醒：</span>
@@ -213,6 +214,9 @@
   .note-dialog {
     overflow-y: scroll;
   }
+  ::-webkit-scrollbar {
+    display: none;
+  }
   .md-speed-dial-target {
     box-shadow: none;
   }
@@ -235,8 +239,7 @@
   @media only screen and (max-width: 700px) {
     .card-body {
       width: 100%;
-      margin-left: 0px;
-      margin-right: 0px;
+      /*margin: 10px 0px;*/
     }
   }
 </style>

@@ -4,7 +4,7 @@
       id="note_form"
       v-on:click.native="openFull"
       tabindex="0">
-      <md-card-area>
+      <md-card-area id="note_form_container">
         <md-card-media v-if="new_note.images.length"
                        class="multi-images"
                        v-for="(image, index) in new_note.images"
@@ -18,24 +18,28 @@
           <!--新记事标题与内容-->
           <!--v-on:keyup.enter="switchToContent"-->
           <div contenteditable="true"
-               style="outline: none; white-space: pre-wrap; font-size: large; margin-left: 5px; margin-top: 5px;"
+               style="font-size: large; outline: none; margin-left: 5px; margin-top: 5px; white-space: pre-wrap;"
                placeholder="标题"
                id="new_title"
                v-on:keydown.enter.prevent="pressTab($event)"
                ref="title"
                tabindex="1"
+               @paste="handlePaste($event)"
+               @blur="polishContent($event)"
                v-html="new_note.title">
           </div>
 
           <div contenteditable="true"
-               style="outline: none; margin-left: 5px;"
+               role="textbox"
+               style="outline: none; margin-left: 5px; white-space: pre-wrap;"
                placeholder="添加内容..."
                id="new_content"
                ref="content"
                tabindex="2"
+               @paste="handlePaste($event)"
+               @blur="polishContent($event)"
                v-html="new_note.content">
           </div>
-
           <div contenteditable="false" style="padding-left: 590px;">
           </div>
           <transition name="editing">
@@ -60,9 +64,10 @@
         </md-card-content>
 
       </md-card-area>
-      <md-snackbar ref="snackbar" :md-active.sync="show_snackbar">
+      <md-snackbar ref="snackbar" :md-active.sync="show_snackbar" style="background-color: #448aff; color: white;">
         <span>{{snackbar_content}}</span>
-        <md-button class="md-accent" md-theme="light-blue" @click="show_snackbar = false">已阅</md-button>
+        <md-button class="md-accent" md-theme="light-blue" @click="show_snackbar = false" style="color: white;">已阅
+        </md-button>
       </md-snackbar>
     </md-card>
   </div>
@@ -89,6 +94,68 @@
       }
     },
     methods: {
+      handlePaste(e) {
+        e.preventDefault();
+        var pastedText = undefined;
+        if (window.clipboardData && window.clipboardData.getData) { // IE
+          pastedText = window.clipboardData.getData('Text');
+        } else if (e.clipboardData && e.clipboardData.getData) {
+          pastedText = e.clipboardData.getData('text/plain');
+        }
+        let texts = pastedText.split('\n')
+        for (let i in texts) {
+          this.insertLine(texts[i])
+        }
+        return false;
+      },
+      insertLine(text) {
+        var sel, range;
+        if (window.getSelection && (sel = window.getSelection()).rangeCount) {
+          range = sel.getRangeAt(0);
+          range.collapse(true);
+          let div = document.createElement("div");
+          div.appendChild(document.createTextNode(text));
+          range.insertNode(div);
+          range.setStartAfter(div);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      },
+      polishContent(e) {
+        /**
+         * @todo 在这里使用id获取能够成功的原因是默认情况下new note form在所有notes之前，
+         * 点开note的dialog，html的位置在new note form之前，
+         * 替代方式是原本打算使用的e.target
+         */
+        console.log(e.target.id)
+        if (e.target.id === 'new_content') {
+          //polish content
+          let content = document.querySelectorAll("#new_content > div")
+          console.log(content.length)
+          while (content.length) {
+            for (let item of content)
+              item.outerHTML = item.innerHTML + "<br/>"
+            content = document.querySelectorAll("#new_content > div")
+          }
+        }
+        else if (e.target.id === 'new_title') {
+          //polish title
+          let title = document.querySelectorAll("#new_title > div")
+          console.log(title.length)
+          while (title.length) {
+            for (let item of content)
+              item.outerHTML = item.innerHTML + "<br/>"
+            title = document.querySelectorAll("#new_title > div")
+          }
+        }
+        else {
+          // invoke before adding note
+          // polish both
+          let content = document.querySelector("#new_content")
+          let title = document.querySelector("#new_title")
+        }
+      },
       openFull(e) {
         if (this.on_edit === true)
           return
@@ -97,27 +164,33 @@
         $("html").on('click', e => {
           if ($(e.target).closest(".md-snackbar").length !== 0) {
             //点到snackbar了,不做操作
-            console.log('in snackbar')
+//            console.log('in snackbar')
             return
           }
           if ($(e.target).closest("#note_form").length === 0) {
             console.log('jiewai')
             if (this.$refs.title.innerHTML !== '' || this.$refs.content.innerHTML !== '' || this.new_note.images.length !== 0) {
-              console.log('not empty')
+//              console.log('not empty')
+              /**
+               * @todo should polish content and then add
+               */
+              this.polishContent(e)
               this.addNote()
             }
             this.on_edit = false
             $("html").off('click')
           }
-          else
-            console.log('jienei')
+//          else
+//            console.log('jienei')
         })
       },
       addOrEdit() {
         if (this.role === "create") {
+          console.log('should add note')
           this.addNote();
         }
         else if (this.role === "edit") {
+          console.log('should edit note')
           this.editNote();
         }
       },
@@ -139,6 +212,7 @@
           data.append(key, this.new_note[key]);
         }
         data.set("createdAt", new Date().toLocaleString());
+        data.set("updatedAt", new Date().toLocaleString());
         this.axios.post(this.GLOBAL.server_address + '/note', data)
           .then((response) => {
             if (response.data.result.ok === 1) {
@@ -323,6 +397,10 @@
 
   @media only screen and (max-width: 700px) {
     #note_form {
+      width: 100%;
+    }
+
+    #note_form_container {
       width: 100%;
     }
   }

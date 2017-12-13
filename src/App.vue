@@ -26,6 +26,7 @@
   import cronJob from './components/cronJob'
   import pageFooter from './components/pageFooter'
   import notificationHandler from './components/notificationHandler'
+  import checkScroll from './module/checkScroll'
   export default {
     name: 'app',
     data () {
@@ -56,7 +57,7 @@
       "page-footer": pageFooter
     },
     mounted() {
-
+      console.log('faaaaaq')
     },
     beforeMount() {
       console.log("app mounted");
@@ -64,6 +65,9 @@
       notificationHandler.requestPermission();
 //      notificationHandler.showNotification("你是谁", "你爸");
       this.fetchData();
+      window.onscroll = () => {
+        checkScroll()
+      }
     },
     methods: {
       fetchData() {
@@ -78,22 +82,36 @@
             this.notes_ready = false;
             console.log("获取数据失败" + e);
           });
+      },
+      getMoreData(seq) {
+        this.notes_ready = false
+        this.axios.get(this.GLOBAL.server_address + '/note?seq=' + seq)
+          .then(res => {
+            console.log('get data of seq: ' + seq + 'successfully')
+            this.note.concat(res.data)
+            this.notes_ready = true;
+          })
+          .catch(e => {
+            console.log('get data of seq: ' + seq + 'failed')
+            this.notes_ready = true;
+          })
       }
     },
     mounted() {
 
     }
   }
+
 </script>
 
 <style scoped>
   /*@media (max-width: 900px) {*/
-    /*.item-note {*/
-      /*width: 100%;*/
-      /*margin-left: 130px;*/
-    /*}*/
-    /*.card-body {*/
-      /*width: 100%!important;*/
-    /*}*/
+  /*.item-note {*/
+  /*width: 100%;*/
+  /*margin-left: 130px;*/
+  /*}*/
+  /*.card-body {*/
+  /*width: 100%!important;*/
+  /*}*/
   /*}*/
 </style>

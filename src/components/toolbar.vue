@@ -3,7 +3,7 @@
     <md-button class="md-icon-button">
       <md-icon>home</md-icon>
     </md-button>
-    <h2 class="md-title" style="">
+    <h2 class="md-title" style="flex: 1">
       在线memo
     </h2>
     <md-button class="md-icon-button" href="https://zhangfeng.site">
