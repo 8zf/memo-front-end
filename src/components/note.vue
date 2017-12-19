@@ -1,5 +1,6 @@
 <template>
   <md-card md-with-hover
+           :show="!showDialog"
            @click.native="openDialog"
            @mouseover.native="showMenu"
            @mouseout.native="hideMenu"

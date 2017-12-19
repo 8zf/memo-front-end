@@ -1,15 +1,17 @@
 <template>
-  <div @click.native="showMenu" class="img-unit">
+  <div @click.native="showMenu"
+       @mouseover="showMenu = true"
+       @mouseout="showMenu = false"
+       class="img-unit">
     <img :src="src[0] === '/' ? GLOBAL.server_address + src : src"
-         class="new-note-preview"
-         @mouseover.native="showMenu"
-         @mouseout.native="hideMenu">
-    <div class="delete-image">
+         class="new-note-preview">
+    <div class="delete-image" v-show="showMenu">
       <md-button class="md-icon-button" @click.native="deleteImage">
-        <md-icon>delete</md-icon>
+        <md-icon style="color: white;">delete</md-icon>
       </md-button>
     </div>
-    <md-progress-bar md-mode="query" class="progress-bar" v-if="!done_uploading[index]"></md-progress-bar>
+    <md-progress-bar md-mode="query" class="progress-bar" v-if="!done_uploading"></md-progress-bar>
+    <!--<div>done????????:{{done_uploading}}</div>-->
   </div>
 </template>
 <script>
@@ -17,32 +19,44 @@
     data() {
       return {
         GLOBAL: this.GLOBAL,
-        toggleMenu: false
+        showMenu: false
       }
+    },
+    updated() {
+//      console.log('image unit update')
+//      this.$emit('rearrange')
     },
     methods: {
       showMenu() {
         console.log("over image");
-        this.toggleMenu = true;
+        this.showMenu = true;
       },
       hideMenu() {
         console.log("out image");
-        this.toggleMenu = false;
+        this.showMenu = false;
       },
       deleteImage() {
         this.$emit("deleteMe", this.index);
       }
     },
-    props: ["src", "done_uploading", "index"]
+    props: ["src", "data_src", "done_uploading", "index"]
   }
 </script>
 <style>
+
+  .img-unit {
+    position: relative;
+  }
   .delete-image {
-    float: right;
-    top: -43px;
+    background-color: #1f1d1d;
+    border-radius: 10px;
+    opacity: 0.8;
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
   }
   .new-note-preview {
-    /*max-width: 602px;*/
+    height: 250px;
   }
   .progress-bar {
     background-color: #b5d0fd;
