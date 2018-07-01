@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>asd</title>
+</head>
+<body>
+<textarea id="asd"></textarea>
+</body>
+<script>
+  let x = document.querySelector("#asd")
+  x.addEventListener('paste', function (e) {
+    e.preventDefault()
+    insertAtCursor(this, 'asd')
+  })
+//  x.onclick = function(e) {
+//    insertAtCursor(this, 'sad')
+//  }
+  // http://stackoverflow.com/questions/11076975/insert-text-into-textarea-at-cursor-position-javascript
+
+  function insertAtCursor(myField, myValue) {
+    //IE support
+    if (document.selection) {
+      console.log('ie');
+      myField.focus();
+      sel = document.selection.createRange();
+      sel.text = myValue;
+    }
+    //MOZILLA and others
+    else if (myField.selectionStart || myField.selectionStart === '0') {
+      console.log('modern');
+      var startPos = myField.selectionStart;
+      var endPos = myField.selectionEnd;
+      myField.value = myField.value.substring(0, startPos)
+        + myValue
+        + myField.value.substring(endPos, myField.value.length);
+      myField.selectionStart = startPos + myValue.length;
+      myField.selectionEnd = startPos + myValue.length;
+    } else {
+      myField.value += myValue;
+    }
+    console.log('wqe')
+  }
+
+//  $('textarea').click(function () {
+//    var $t = $(this);
+//    insertAtCursor(this, '[INSERTED]');
+//  });
+</script>
+</html>

@@ -6,13 +6,9 @@
            @mouseout.native="hideMenu"
            class="card-body animated"
            v-bind:class="{zoomOut: isDisappear, fadeIn: !isDisappear}">
-    <md-card-media
-      class="note-image"
-      v-if="note.images.length && note.type === 'ordinary'"
-      v-for="image_path in note.images"
-      :key="image_path">
-      <img :src="GLOBAL.server_address+image_path">
-    </md-card-media>
+    <div class="card-media-container">
+      <!--因为vue的特性態实时更新，所以使用动态插入dom元素的方法，但是现在可以使用双重nextTick-->
+    </div>
     <md-card-header>
       <div class="md-title" v-html="note.title" style="white-space: pre-wrap;"></div>
     </md-card-header>
@@ -69,12 +65,16 @@
   import editNote from "./editNote"
   import noteForm from "./noteForm"
   import myDatepicker from 'vue-datepicker/vue-datepicker-es6.vue'
+  import loadImage from 'image-promise'
   export default {
     data () {
       return {
         showDialog: false,
         menuToggle: false,
         datePickerToggle: false,
+        imagesLoaded: false,
+        loadedImages: [],
+        imageFlexBasis: [],
         GLOBAL: this.GLOBAL,
         startTime: {
           time: this.note.informTime
@@ -115,8 +115,85 @@
     },
     mounted() {
 //      this.isDisappear = false
+      console.log('mounted')
+      loadImage(this.note.images)
+        .then(imgs => {
+          console.log('images loaded successfully')
+          /**
+           * load 完成之后进行重排
+           * 之后嵌入图片
+           */
+          // rearrange
+          this.rearrangeImages(imgs)
+          // insert Nodes
+          for (let i = 0; i < imgs.length; i++) {
+//            this.loadedImages[i] = imgs[i].src
+            let div = document.createElement('div')
+            div.style.flexBasis = this.imageFlexBasis[i]
+            div.appendChild(imgs[i])
+            this.$el.querySelector(".card-media-container").appendChild(div)
+          }
+        })
+        .catch(e => {
+          console.log(e)
+        })
     },
     methods: {
+      rearrangeImages(imgs) {
+        /**
+         * 重排图片，使之适应宽度并且适当缩小
+         * @param this.new_note this.image_data
+         * 根据这两个来确定每三张一组的图片的缩放比例，也可以直接规定这一组的高度
+         * 通过设置flex-basis来重新排列图片
+         * 对于初始化状态，应当在vue更新dom之后进行操作
+         */
+        /**
+         * 如果想要在load图片之前就得到图片信息，则需要使用cdn
+         */
+        console.log('rearrange in note!!!!!!!!!!!')
+        let row_height = []
+        let container_width = window.getComputedStyle(this.$el).width
+        container_width = parseInt(container_width.substring(0, container_width.length - 2))
+        console.log('container width: ' + container_width)
+        /**
+         * 倒序
+         */
+        console.log('have ' + imgs.length + ' images now')
+        for (let i in imgs) {
+          console.log('natural width: ' + imgs[i].naturalWidth + ', natural height: ' + imgs[i].naturalHeight)
+          if ((i + 1) % 3 === 0 && i !== 0) {
+            let h = container_width / (imgs[i - 2].naturalWidth / imgs[i - 2].naturalHeight + imgs[i - 1].naturalWidth / imgs[i - 1].naturalHeight + imgs[i].naturalWidth / imgs[i].naturalHeight)
+            row_height.push(h)
+            let w1 = h * imgs[i - 2].naturalWidth / imgs[i - 2].naturalHeight
+            let w2 = h * imgs[i - 1].naturalWidth / imgs[i - 1].naturalHeight
+            let w3 = h * imgs[i].naturalWidth / imgs[i].naturalHeight
+            /**
+             * 设置style，改为设置数据
+             */
+            this.imageFlexBasis[i - 2] = w1 + 'px'
+            this.imageFlexBasis[i - 1] = w2 + 'px'
+            this.imageFlexBasis[i] = w3 + 'px'
+          }
+          else if (i == (imgs.length - 1)) {
+            if ((i + 1) % 3 === 1) {
+              /**
+               * 这里需要注意如果大于 container_width 则直接设置为 container_width，其实可以直接设置为 container_width
+               */
+              this.imageFlexBasis[i] = container_width + 'px'
+            }
+            else if ((i + 1) % 3 === 2) {
+              let h = container_width / (imgs[i - 1].naturalWidth / imgs[i - 1].naturalHeight + imgs[i].naturalWidth / imgs[i].naturalHeight)
+              row_height.push(h)
+              let w1 = h * imgs[i - 1].naturalWidth / imgs[i - 1].naturalHeight
+              let w2 = h * imgs[i].naturalWidth / imgs[i].naturalHeight
+              this.imageFlexBasis[i - 1] = w1 + 'px'
+              this.imageFlexBasis[i] = w2 + 'px'
+            }
+          }
+        }
+        console.log('rearrange results')
+        console.log(this.imageFlexBasis)
+      },
       showMenu() {
 //        console.log('show')
         this.menuToggle = true
@@ -235,6 +312,11 @@
   .menu-fade-enter, .menu-fade-leave-active {
     /*transform: translateX(10px);*/
     opacity: 0;
+  }
+
+  .card-media-container {
+    display: flex;
+    flex-wrap: wrap;
   }
 
   @media only screen and (max-width: 700px) {

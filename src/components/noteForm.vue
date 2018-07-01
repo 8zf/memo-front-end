@@ -67,8 +67,9 @@
               <md-button md-fab md-fab-bottom-right @click.native.stop="addOrEdit" class="md-primary">
                 完成
               </md-button>
-              <md-button md-fab md-fab-bottom-right @click.native.stop="rearrangeImages" class="md-primary">
-                重排
+              <md-button md-fab md-fab-bottom-right @click.native.stop="closeThis" v-if="role==='edit'"
+                         class="md-primary">
+                关闭
               </md-button>
             </md-card-actions>
           </transition>
@@ -90,7 +91,7 @@
   import parseUrl from 'url-parse'
   import loadImage from 'image-promise'
   /**
-   * 更改XMLHttpRequest原型，这样才能在error抛出的XMLHttpRequest中得到request的url
+   * 更改 XMLHttpRequest 原型，这样才能在 error 抛出的 XMLHttpRequest 中得到 request 的 url
    */
   let xhrProto = XMLHttpRequest.prototype,
     origOpen = xhrProto.open;
@@ -150,15 +151,24 @@
         console.log('set new_note.images')
         /**
          * 不能简单的使用setter，因为要求的是在set操作完成之后进行rearrange
+         * 删除操作使用nextTick可以达到即时重排，而使用timeout会在下次更新时才行
+         * 两个nextTick无疑是年度最佳操作了
          */
-//        this.rearrangeImages()
+        this.$nextTick(() => {
+          console.log('in nextTick1')
+          this.$nextTick(() => {
+            console.log('in nextTick2')
+            this.rearrangeImages()
+          })
+        })
+        console.log('should before rearrange')
       },
     },
     updated() {
       /**
        * 过于频繁，不在这使用
        */
-      console.log('noteform updated')
+//      console.log('noteform updated')
 //      this.rearrangeImages()
     },
     methods: {
@@ -234,6 +244,9 @@
 //          else
 //            console.log('jienei')
         })
+      },
+      closeThis() {
+        this.$emit("toggleClose")
       },
       addOrEdit() {
         /**
@@ -352,7 +365,7 @@
             .then((response) => {
               console.log('update image success');
               console.log(response);
-//              this.new_note.images.splice(index, 1);
+//              this.new_notem.images.splice(index, 1);
 //              this.image_data.splice(index, 1)
 //              this.done_uploading.splice(index, 1)
               this.snackbar_content = "更新图片成功";
@@ -403,7 +416,12 @@
            * 所以，很烦
            */
           let now_length = this.image_data.push(e.target.result)
+//          console.log('before push new_note images')
+          /**
+           * 为什么要在这里push一个空值呢，去掉试试，并没有问题
+           */
           this.new_note.images.push('')
+//          console.log('after push new_note images')
           //创建一个multipart请求
           let data = new FormData();
           data.append('note_image', this.$refs.image_input.files[0]);
@@ -417,8 +435,8 @@
                */
               this.new_note.images[seq] = response.data.filepath;
               console.log("图片上传成功: " + seq);
-              console.log('onload image data rearrange')
-              this.rearrangeImages()
+//              console.log('onload image data rearrange')
+//              this.rearrangeImages()
               this.snackbar_content = "图片上传成功";
               this.done_uploading[seq] = true;
               this.show_snackbar = true;
@@ -459,7 +477,6 @@
         this.done_uploading.splice(index, 1)
         this.image_flex_basis.splice(index, 1)
         console.log('after delete rearrange')
-        this.$nextTick(this.rearrangeImages)
         this.updateNoteImages(index);
       },
       rearrangeImages() {
@@ -489,18 +506,11 @@
          */
         console.log('have ' + this.new_note.images.length + ' images now')
         for (let i in this.new_note.images) {
-//          let len = this.new_note.images.length - 1
           real_images[i] = (this.image_data[i] == '') ? this.new_note.images[i] : this.image_data[i]
           /**
-           * 用这个就注定无法异步渲染完成
+           * 用这个就注定无法一步渲染完成
            */
           imgs[i] = this.$el.querySelector("#note_form>.note-form-container>.note-images>[image_index='" + i + "']>.img-unit>img")
-//          imgs[i].internal_index = i
-//          imgs[i].src = real_images[i]
-//          imgs[i].onload = e => {
-//            console.log('loaded')
-//            console.log(e.target.internal_index)
-//          }
           console.log('natural width: ' + imgs[i].naturalWidth + ', natural height: ' + imgs[i].naturalHeight)
           if ((i + 1) % 3 === 0 && i !== 0) {
             let h = container_width / (imgs[i - 2].naturalWidth / imgs[i - 2].naturalHeight + imgs[i - 1].naturalWidth / imgs[i - 1].naturalHeight + imgs[i].naturalWidth / imgs[i].naturalHeight)
@@ -514,25 +524,13 @@
             this.image_flex_basis[i - 2] = w1 + 'px'
             this.image_flex_basis[i - 1] = w2 + 'px'
             this.image_flex_basis[i] = w3 + 'px'
-//            document.querySelector("[image_index='" + (i - 2) + "']").style['flex-basis'] = w1 + 'px'
-//            document.querySelector("[image_index='" + (i - 1) + "']").style['flex-basis'] = w2 + 'px'
-//            document.querySelector("[image_index='" + i + "']").style['flex-basis'] = w3 + 'px'
-//            console.log('calculated height: ' + h)
-//            console.log('w1: ' + w1)
-//            console.log('w2: ' + w2)
-//            console.log('w3: ' + w3)
           }
           else if (i == (this.new_note.images.length - 1)) {
             if ((i + 1) % 3 === 1) {
               /**
                * 这里需要注意如果大于 container_width 则直接设置为 container_width，其实可以直接设置为 container_width
                */
-//              let h = imgs[i].height
-//              row_height.push(h)
-//              let w1 = h * imgs[i].width / imgs[i].height
               this.image_flex_basis[i] = container_width + 'px'
-//              document.querySelector("[image_index='" + i + "']").style['flex-basis'] = w1 + 'px'
-//              console.log('remains one image height: ' + h)
             }
             else if ((i + 1) % 3 === 2) {
               let h = container_width / (imgs[i - 1].naturalWidth / imgs[i - 1].naturalHeight + imgs[i].naturalWidth / imgs[i].naturalHeight)
@@ -541,16 +539,12 @@
               let w2 = h * imgs[i].naturalWidth / imgs[i].naturalHeight
               this.image_flex_basis[i - 1] = w1 + 'px'
               this.image_flex_basis[i] = w2 + 'px'
-//              document.querySelector("[image_index='" + (i - 1) + "']").style['flex-basis'] = w1 + 'px'
-//              document.querySelector("[image_index='" + i + "']").style['flex-basis'] = w2 + 'px'
-//              console.log('remains one image height: ' + h)
             }
           }
         }
         console.log('rearrange results')
         console.log(this.image_flex_basis)
-      }
-      ,
+      },
     }
   }
 </script>
@@ -559,8 +553,6 @@
     content: attr(placeholder);
     display: block; /* For Firefox */
   }
-
-  /* */
 
   div[contenteditable=true] {
     /*border: 1px dashed #AAA;*/

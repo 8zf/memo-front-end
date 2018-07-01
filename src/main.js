@@ -19,7 +19,7 @@ Vue.use(VueMaterial);
 Vue.use(VueAxios, axios);
 Vue.use(VueMasonryPlugin);
 Vue.prototype.GLOBAL = globalParams;
-Vue.config.devtools = false
+Vue.config.devtools = true
 // Vue.material.registerTheme({
 //   default: {
 //     primary: 'blue',
